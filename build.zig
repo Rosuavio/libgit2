@@ -259,28 +259,36 @@ pub fn build(b: *std.Build) !void {
         features.addValues(.{ .GIT_HTTPPARSER_BUILTIN = 1 });
     }
     if (target.result.os.tag != .macos) {
-        const pcre = b.createModule(.{
+        const pcre2 = b.createModule(.{
             .target = target,
             .optimize = optimize,
             .link_libc = true,
         });
-        pcre.addConfigHeader(b.addConfigHeader(
-            .{ .style = .{ .cmake = libgit_src.path("deps/pcre/config.h.in") } },
+        pcre2.addConfigHeader(b.addConfigHeader(
+            .{ .style = .{ .cmake = libgit_src.path("deps/pcre2/config.h.in") } },
             .{
                 .SUPPORT_PCRE8 = 1,
-                .PCRE_LINK_SIZE = 2,
-                .PCRE_PARENS_NEST_LIMIT = 250,
-                .PCRE_MATCH_LIMIT = 10000000,
-                .PCRE_MATCH_LIMIT_RECURSION = "MATCH_LIMIT",
+                .PCRE2_LINK_SIZE = 2,
+                .PCRE2_HEAP_LIMIT = 20000000,
+                .PCRE2_MATCH_LIMIT = 10000000,
+                .PCRE2_MATCH_LIMIT_DEPTH = "MATCH_LIMIT",
+                .PCRE2_MAX_VARLOOKBEHIND = 255,
+                .NEWLINE_DEFAULT = 2,
+                // https://www.pcre2.org/guide/readme/#building-pcre2-using-autotools
+                // https://www.pcre2.org/doc/pcre2build/#_pcre2grep_buffer_size
+                .PCRE2GREP_BUFSIZE = 20480,
+                .PCRE2GREP_MAX_BUFSIZE = 1048576,
+                .PCRE2_PARENS_NEST_LIMIT = 250,
+                .PCRE2_MATCH_LIMIT_RECURSION = "MATCH_LIMIT",
                 .NEWLINE = '\n',
                 .NO_RECURSE = 1,
-                .PCRE_POSIX_MALLOC_THRESHOLD = 10,
+                .PCRE2_POSIX_MALLOC_THRESHOLD = 10,
                 .BSR_ANYCRLF = 0,
                 .PCREGREP_BUFSIZE = null,
             },
         ));
-        pcre.addIncludePath(libgit_src.path("deps/pcre"));
-        pcre.addCSourceFiles(.{
+        pcre2.addIncludePath(libgit_src.path("deps/pcre2"));
+        pcre2.addCSourceFiles(.{
             .root = libgit_root,
             .files = &pcre_sources,
             .flags = &.{
@@ -290,11 +298,11 @@ pub fn build(b: *std.Build) !void {
             },
         });
 
-        mod.addIncludePath(libgit_src.path("deps/pcre"));
+        mod.addIncludePath(libgit_src.path("deps/pcre2"));
         mod.linkLibrary(b.addLibrary(.{
-            .name = "pcre",
+            .name = "pcre2",
             .linkage = .static,
-            .root_module = pcre,
+            .root_module = pcre2,
         }));
         features.addValues(.{ .GIT_REGEX_BUILTIN = 1 });
     }
@@ -485,7 +493,7 @@ pub fn build(b: *std.Build) !void {
 
         runner.addIncludePath(libgit_src.path("deps/zlib"));
         runner.addIncludePath(libgit_src.path("deps/xdiff"));
-        runner.addIncludePath(libgit_src.path("deps/pcre"));
+        runner.addIncludePath(libgit_src.path("deps/pcre2"));
         maybeAddTlsIncludes(runner, tls_dep, tls_backend);
 
         runner.linkLibrary(lib);
@@ -856,29 +864,37 @@ const llhttp_sources = [_][]const u8{
 };
 
 const pcre_sources = [_][]const u8{
-    "deps/pcre/pcre_byte_order.c",
-    "deps/pcre/pcre_chartables.c",
-    "deps/pcre/pcre_compile.c",
-    "deps/pcre/pcre_config.c",
-    "deps/pcre/pcre_dfa_exec.c",
-    "deps/pcre/pcre_exec.c",
-    "deps/pcre/pcre_fullinfo.c",
-    "deps/pcre/pcre_get.c",
-    "deps/pcre/pcre_globals.c",
-    "deps/pcre/pcre_jit_compile.c",
-    "deps/pcre/pcre_maketables.c",
-    "deps/pcre/pcre_newline.c",
-    "deps/pcre/pcre_ord2utf8.c",
-    "deps/pcre/pcre_printint.c",
-    "deps/pcre/pcre_refcount.c",
-    "deps/pcre/pcre_string_utils.c",
-    "deps/pcre/pcre_study.c",
-    "deps/pcre/pcre_tables.c",
-    "deps/pcre/pcre_ucd.c",
-    "deps/pcre/pcre_valid_utf8.c",
-    "deps/pcre/pcre_version.c",
-    "deps/pcre/pcre_xclass.c",
-    "deps/pcre/pcreposix.c",
+    "deps/pcre2/pcre2_auto_possess.c",
+    "deps/pcre2/pcre2_chartables.c",
+    "deps/pcre2/pcre2_chkdint.c",
+    "deps/pcre2/pcre2_compile.c",
+    "deps/pcre2/pcre2_compile_cgroup.c",
+    "deps/pcre2/pcre2_compile_class.c",
+    "deps/pcre2/pcre2_config.c",
+    "deps/pcre2/pcre2_context.c",
+    "deps/pcre2/pcre2_convert.c",
+    "deps/pcre2/pcre2_dfa_match.c",
+    "deps/pcre2/pcre2_error.c",
+    "deps/pcre2/pcre2_extuni.c",
+    "deps/pcre2/pcre2_find_bracket.c",
+    "deps/pcre2/pcre2_fuzzsupport.c",
+    "deps/pcre2/pcre2_maketables.c",
+    "deps/pcre2/pcre2_match.c",
+    "deps/pcre2/pcre2_match_data.c",
+    "deps/pcre2/pcre2_match_next.c",
+    "deps/pcre2/pcre2_newline.c",
+    "deps/pcre2/pcre2_ord2utf.c",
+    "deps/pcre2/pcre2_pattern_info.c",
+    "deps/pcre2/pcre2_script_run.c",
+    "deps/pcre2/pcre2_serialize.c",
+    "deps/pcre2/pcre2_string_utils.c",
+    "deps/pcre2/pcre2_study.c",
+    "deps/pcre2/pcre2_substitute.c",
+    "deps/pcre2/pcre2_substring.c",
+    "deps/pcre2/pcre2_tables.c",
+    "deps/pcre2/pcre2_ucd.c",
+    "deps/pcre2/pcre2_valid_utf.c",
+    "deps/pcre2/pcre2_xclass.c",
 };
 
 const zlib_sources = [_][]const u8{
