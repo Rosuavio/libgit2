@@ -5,9 +5,9 @@
     .fingerprint = 0x7f0051374dea2cba,
     .dependencies = .{
         .libgit2 = .{
-            .version = "1.9.5",
+            .version = "1.9.7",
             .url = "https://github.com/libgit2/libgit2/archive/refs/tags/v1.9.5.tar.gz",
-            .hash = "N-V-__8AAL42NgFNPhVK1LtsZzl90Lnp-y3YLV_UFKSRzDzj",
+            .hash = "N-V-__8AAPE7NgGzXiYp17A2YYEYpVRbRzgNqovmU-BWmr8z",
         },
         .openssl = .{
             .url = "git+https://github.com/allyourcodebase/openssl.git#0ac677650d43eadf669067d050992118b13338d2",
